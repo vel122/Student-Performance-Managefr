@@ -1,6 +1,8 @@
+import csv
 import json
 
 students = {}
+
 
 def register_student():
     student_id = input("Enter Student Id: ")
@@ -10,12 +12,13 @@ def register_student():
         students[student_id] = {
             "name": name,
             "batch": batch,
-            "attendance": {'total_days': 0, 'present_days': 0},
-            "terms": {}
+            "attendance": {"total_days": 0, "present_days": 0},
+            "terms": {},
         }
         print(f"Student {name} registered successfully.")
     else:
         print("Student ID already exists.")
+
 
 def add_term_result():
     student_id = input("Enter Student Id: ")
@@ -33,6 +36,7 @@ def add_term_result():
     else:
         print("Student ID not found. Please register the student first.")
 
+
 def update_subject_mark():
     student_id = input("Enter Student Id: ")
     term = input("Enter Term Name: ")
@@ -43,6 +47,7 @@ def update_subject_mark():
         print("Marks updated successfully.")
     except KeyError:
         print("Invalid student ID, term, or subject name.")
+
 
 def record_attendance():
     student_id = input("Enter Student Id: ")
@@ -56,6 +61,7 @@ def record_attendance():
     else:
         print("Student ID not found. Please register the student first.")
 
+
 def calculate_average(student_id):
     terms = students[student_id]["terms"]
     total_marks = 0
@@ -66,15 +72,22 @@ def calculate_average(student_id):
             count += 1
     return total_marks / count if count else 0
 
+
 def calculate_attendance_percentage(student_id):
     attendance = students[student_id]["attendance"]
-    return (attendance["present_days"] / attendance["total_days"]) * 100 if attendance["total_days"] > 0 else 0
+    total = attendance["total_days"]
+    present = attendance["present_days"]
+    if total > 0:
+        return (present / total) * 100
+    return 0
+
 
 def get_term_average(student_id, term):
     term_data = students[student_id]["terms"].get(term)
     if not term_data:
         return 0
     return sum(term_data.values()) / len(term_data)
+
 
 def get_topper_by_term_name(term_name):
     top_student = None
@@ -86,6 +99,7 @@ def get_topper_by_term_name(term_name):
                 top_avg = avg
                 top_student = (data["name"], avg)
     return top_student
+
 
 def generate_student_report():
     sid = input("Enter student ID: ").strip()
@@ -112,8 +126,8 @@ def generate_student_report():
         if top_student:
             name, avg = top_student
             print(f"Top Performer: {name} in {term} with {avg:.1f} average.")
-
     print()
+
 
 def rank_students_by_overall_average():
     batch = input("Enter batch year: ")
@@ -128,21 +142,59 @@ def rank_students_by_overall_average():
         print(f"{idx}. {name} (ID: {sid}) - Average: {avg:.2f}")
     print()
 
+
 def export_data_to_json():
     filename = input("Enter filename to export (e.g., data.json): ")
-    with open(filename, 'w') as f:
+    with open(filename, "w") as f:
         json.dump(students, f, indent=4)
-    print("Data exported successfully.\n")
+    print("Data exported to JSON.")
+
+    save_to_csv(students)
+    print("Data also exported to CSV\n")
+
 
 def import_data_from_json():
     global students
     filename = input("Enter filename to import (e.g., data.json): ")
     try:
-        with open(filename, 'r') as f:
+        with open(filename, "r") as f:
             students = json.load(f)
         print("Data imported successfully.\n")
     except FileNotFoundError:
         print("File not found.\n")
+
+
+def save_to_csv(data):
+    with open("student_data.csv", mode="w", newline="") as file:
+        writer = csv.writer(file)
+        writer.writerow(
+            [
+                "Student ID",
+                "Name",
+                "Batch",
+                "Total Days",
+                "Present Days",
+                "Term",
+                "Math",
+                "Physics",
+                "English",
+            ]
+        )
+
+        for sid, student in data.items():
+            name = student["name"]
+            batch = student["batch"]
+            total = student["attendance"]["total_days"]
+            present = student["attendance"]["present_days"]
+
+            for term, subjects in student["terms"].items():
+                math = subjects.get("Math", "")
+                physics = subjects.get("Physics", "")
+                english = subjects.get("English", "")
+                writer.writerow(
+                    [sid, name, batch, total, present, term, math, physics, english]
+                )
+
 
 if __name__ == "__main__":
     while True:
@@ -160,44 +212,44 @@ if __name__ == "__main__":
         print("12. Exit")
         choice = input("Enter your choice: ")
 
-        if choice == '1':
+        if choice == "1":
             register_student()
-        elif choice == '2':
+        elif choice == "2":
             add_term_result()
-        elif choice == '3':
+        elif choice == "3":
             update_subject_mark()
-        elif choice == '4':
+        elif choice == "4":
             record_attendance()
-        elif choice == '5':
+        elif choice == "5":
             sid = input("Enter Student ID: ").strip()
             if sid in students:
                 avg = calculate_average(sid)
                 print(f"Average marks for {sid}: {avg:.2f}")
             else:
                 print("Student not found.")
-        elif choice == '6':
+        elif choice == "6":
             sid = input("Enter Student ID: ").strip()
             if sid in students:
                 attendance = calculate_attendance_percentage(sid)
                 print(f"Attendance percentage for {sid}: {attendance:.2f}%")
             else:
                 print("Student not found.")
-        elif choice == '7':
+        elif choice == "7":
             term = input("Enter Term Name: ")
             top = get_topper_by_term_name(term)
             if top:
                 print(f"Topper for term {term} is {top[0]} with average {top[1]:.1f}")
             else:
                 print(f"No results for term {term}.")
-        elif choice == '8':
+        elif choice == "8":
             rank_students_by_overall_average()
-        elif choice == '9':
+        elif choice == "9":
             generate_student_report()
-        elif choice == '10':
+        elif choice == "10":
             export_data_to_json()
-        elif choice == '11':
+        elif choice == "11":
             import_data_from_json()
-        elif choice == '12':
+        elif choice == "12":
             print("Exiting the program.")
             break
         else:
